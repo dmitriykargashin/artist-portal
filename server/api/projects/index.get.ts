@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
     .from(projects)
     .where(eq(projects.userId, user.id))
 
-  const allProjects = projectQuery.orderBy(desc(projects.createdAt)).all()
+  const allProjects = await projectQuery.orderBy(desc(projects.createdAt)).all()
 
   // Filter by status if provided
   const filteredProjects = status
@@ -19,8 +19,8 @@ export default defineEventHandler(async (event) => {
     : allProjects
 
   // Get deliverables count for each project
-  const projectsWithMeta = filteredProjects.map(project => {
-    const projectDeliverables = db.select()
+  const projectsWithMeta = await Promise.all(filteredProjects.map(async project => {
+    const projectDeliverables = await db.select()
       .from(deliverables)
       .where(eq(deliverables.projectId, project.id))
       .all()
@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
       totalDeliverables,
       completedDeliverables
     }
-  })
+  }))
 
   return {
     success: true,

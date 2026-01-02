@@ -1,12 +1,28 @@
-import Database from 'better-sqlite3'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
+import { createClient, type Client } from '@libsql/client'
+import { drizzle, type LibSQLDatabase } from 'drizzle-orm/libsql'
 import * as schema from './schema'
-import { join } from 'path'
 
-const dbPath = join(process.cwd(), 'server', 'db', 'dev.sqlite')
-const sqlite = new Database(dbPath)
-sqlite.pragma('journal_mode = WAL')
+// Lazy initialization to ensure env vars are loaded
+let client: Client | null = null
+let _db: LibSQLDatabase<typeof schema> | null = null
 
-export const db = drizzle(sqlite, { schema })
+function getClient(): Client {
+  if (!client) {
+    client = createClient({
+      url: process.env.TURSO_DATABASE_URL || 'file:server/db/dev.sqlite',
+      authToken: process.env.TURSO_AUTH_TOKEN
+    })
+  }
+  return client
+}
+
+export const db = new Proxy({} as LibSQLDatabase<typeof schema>, {
+  get(_, prop) {
+    if (!_db) {
+      _db = drizzle(getClient(), { schema })
+    }
+    return (_db as any)[prop]
+  }
+})
 
 export * from './schema'

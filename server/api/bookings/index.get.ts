@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   const status = query.status as string | undefined
   const upcoming = query.upcoming === 'true'
 
-  let allBookings = db.select()
+  let allBookings = await db.select()
     .from(bookings)
     .where(eq(bookings.userId, user.id))
     .orderBy(bookings.startAt)

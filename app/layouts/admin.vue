@@ -10,8 +10,7 @@ import {
   Bell,
   Search,
   Command,
-  User,
-  BarChart3
+  User
 } from 'lucide-vue-next'
 
 const { user, logout } = useAuth()
@@ -24,8 +23,7 @@ const navigation = [
   { name: 'Overview', href: '/admin', icon: LayoutDashboard },
   { name: 'Artists', href: '/admin/artists', icon: Users },
   { name: 'Deliverables Queue', href: '/admin/deliverables', icon: ClipboardList },
-  { name: 'Services Editor', href: '/admin/services', icon: Settings },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 }
+  { name: 'Services Editor', href: '/admin/services', icon: Settings }
 ]
 
 const isActive = (href: string) => {

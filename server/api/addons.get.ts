@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
 
   const queryBuilder = db.select().from(addons).where(eq(addons.active, true))
 
-  const allAddons = queryBuilder.orderBy(addons.sortOrder).all()
+  const allAddons = await queryBuilder.orderBy(addons.sortOrder).all()
 
   // Filter by category if provided
   const filteredAddons = category
@@ -18,8 +18,8 @@ export default defineEventHandler(async (event) => {
     success: true,
     addons: filteredAddons.map(addon => ({
       ...addon,
-      scope: addon.scope ? JSON.parse(addon.scope as unknown as string) : [],
-      requirements: addon.requirements ? JSON.parse(addon.requirements as unknown as string) : []
+      scope: parseJsonField(addon.scope),
+      requirements: parseJsonField(addon.requirements)
     }))
   }
 })

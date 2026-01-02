@@ -16,11 +16,11 @@
     "db:studio": "npx drizzle-kit studio"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.15",
     "@tanstack/vue-table": "^8.21.3",
     "@vueuse/core": "^14.1.0",
     "@vueuse/motion": "^3.0.3",
     "@vueuse/nuxt": "^14.1.0",
-    "better-sqlite3": "^12.5.0",
     "chart.js": "^4.5.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -38,7 +38,6 @@
   "devDependencies": {
     "@nuxt/eslint": "^1.12.1",
     "@nuxtjs/tailwindcss": "^6.14.0",
-    "@types/better-sqlite3": "^7.6.13",
     "drizzle-kit": "^0.31.8",
     "eslint": "^9.39.2",
     "tsx": "^4.21.0",

@@ -5,7 +5,7 @@ import { requireAuth } from '../utils/auth'
 export default defineEventHandler(async (event) => {
   const user = await requireAuth(event)
 
-  const allGoals = db.select()
+  const allGoals = await db.select()
     .from(goals)
     .where(eq(goals.userId, user.id))
     .all()

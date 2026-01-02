@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const project = db.select()
+  const project = await db.select()
     .from(projects)
     .where(eq(projects.id, projectId))
     .get()
@@ -34,14 +34,14 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get deliverables
-  const projectDeliverables = db.select()
+  const projectDeliverables = await db.select()
     .from(deliverables)
     .where(eq(deliverables.projectId, projectId))
     .orderBy(deliverables.sortOrder)
     .all()
 
   // Get messages
-  const projectMessages = db.select({
+  const projectMessages = await db.select({
     id: messages.id,
     content: messages.content,
     attachmentUrl: messages.attachmentUrl,
@@ -58,7 +58,7 @@ export default defineEventHandler(async (event) => {
     .all()
 
   // Get attachments
-  const projectAttachments = db.select()
+  const projectAttachments = await db.select()
     .from(attachments)
     .where(eq(attachments.projectId, projectId))
     .orderBy(desc(attachments.createdAt))

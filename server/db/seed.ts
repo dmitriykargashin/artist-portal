@@ -1,5 +1,5 @@
-import Database from 'better-sqlite3'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
+import { createClient } from '@libsql/client'
+import { drizzle } from 'drizzle-orm/libsql'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
 import * as schema from './schema'
@@ -13,15 +13,23 @@ if (!existsSync(dbDir)) {
   mkdirSync(dbDir, { recursive: true })
 }
 
-// Remove existing database if exists
-if (existsSync(dbPath)) {
-  unlinkSync(dbPath)
-  console.log('🗑️  Removed existing database')
+// Remove existing database if exists (local dev only)
+if (!process.env.TURSO_DATABASE_URL) {
+  try {
+    if (existsSync(dbPath)) unlinkSync(dbPath)
+    if (existsSync(dbPath + '-shm')) unlinkSync(dbPath + '-shm')
+    if (existsSync(dbPath + '-wal')) unlinkSync(dbPath + '-wal')
+    console.log('🗑️  Removed existing database')
+  } catch (e) {
+    // Ignore errors
+  }
 }
 
-const sqlite = new Database(dbPath)
-sqlite.pragma('journal_mode = WAL')
-const db = drizzle(sqlite, { schema })
+const client = createClient({
+  url: process.env.TURSO_DATABASE_URL || `file:${dbPath}`,
+  authToken: process.env.TURSO_AUTH_TOKEN
+})
+const db = drizzle(client, { schema })
 
 // Helper functions
 const uuid = () => randomUUID()
@@ -31,9 +39,28 @@ const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 10
 async function seed() {
   console.log('🌱 Starting database seed...\n')
 
+  // Clear existing data (for reseeding)
+  console.log('🧹 Clearing existing data...')
+  await client.executeMultiple(`
+    DELETE FROM activities;
+    DELETE FROM goals;
+    DELETE FROM metrics;
+    DELETE FROM notifications;
+    DELETE FROM messages;
+    DELETE FROM deliverable_comments;
+    DELETE FROM deliverables;
+    DELETE FROM projects;
+    DELETE FROM addons;
+    DELETE FROM subscriptions;
+    DELETE FROM plans;
+    DELETE FROM sessions;
+    DELETE FROM artist_profiles;
+    DELETE FROM users;
+  `)
+
   // Create tables
   console.log('📋 Creating tables...')
-  sqlite.exec(`
+  await client.executeMultiple(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT NOT NULL UNIQUE,
@@ -240,7 +267,7 @@ async function seed() {
   const artistUserId = 'user_artist_demo'
   const adminUserId = 'user_admin_demo'
 
-  db.insert(schema.users).values([
+  await db.insert(schema.users).values([
     {
       id: artistUserId,
       email: 'artist@demo.com',
@@ -261,7 +288,7 @@ async function seed() {
 
   // Seed Artist Profile
   console.log('🎨 Seeding artist profile...')
-  db.insert(schema.artistProfiles).values({
+  await db.insert(schema.artistProfiles).values({
     id: uuid(),
     userId: artistUserId,
     genre: 'Indie Pop / Electronic',
@@ -284,7 +311,7 @@ async function seed() {
   const planPremiumId = 'plan_premium'
   const planDeluxeId = 'plan_deluxe'
 
-  db.insert(schema.plans).values([
+  await db.insert(schema.plans).values([
     {
       id: planStandardId,
       name: 'Standard',
@@ -378,7 +405,7 @@ async function seed() {
 
   // Seed Subscription
   console.log('💳 Seeding subscriptions...')
-  db.insert(schema.subscriptions).values({
+  await db.insert(schema.subscriptions).values({
     id: uuid(),
     userId: artistUserId,
     planId: planPremiumId,
@@ -415,7 +442,7 @@ async function seed() {
   for (const addon of addonsData) {
     const id = uuid()
     addonIds.push(id)
-    db.insert(schema.addons).values({
+    await db.insert(schema.addons).values({
       id,
       name: addon.name,
       slug: addon.slug,
@@ -440,7 +467,7 @@ async function seed() {
     playlist: uuid()
   }
 
-  db.insert(schema.projects).values([
+  await db.insert(schema.projects).values([
     {
       id: projectIds.monthly,
       userId: artistUserId,
@@ -534,7 +561,7 @@ async function seed() {
     const d = deliverableData[i]
     const id = uuid()
     deliverableIds.push(id)
-    db.insert(schema.deliverables).values({
+    await db.insert(schema.deliverables).values({
       id,
       projectId: d.projectId,
       title: d.title,
@@ -559,7 +586,7 @@ async function seed() {
   ]
 
   for (const comment of comments) {
-    db.insert(schema.deliverableComments).values({
+    await db.insert(schema.deliverableComments).values({
       id: uuid(),
       deliverableId: comment.deliverableId,
       authorId: comment.authorId,
@@ -585,7 +612,7 @@ async function seed() {
   ]
 
   for (let i = 0; i < messagesData.length; i++) {
-    db.insert(schema.messages).values({
+    await db.insert(schema.messages).values({
       id: uuid(),
       projectId: messagesData[i].projectId,
       authorId: messagesData[i].authorId,
@@ -597,7 +624,7 @@ async function seed() {
 
   // Seed Bookings
   console.log('📅 Seeding bookings...')
-  db.insert(schema.bookings).values([
+  await db.insert(schema.bookings).values([
     {
       id: uuid(),
       userId: artistUserId,
@@ -649,7 +676,7 @@ async function seed() {
 
   for (let i = 0; i < notificationsData.length; i++) {
     const n = notificationsData[i]
-    db.insert(schema.notifications).values({
+    await db.insert(schema.notifications).values({
       id: uuid(),
       userId: n.userId,
       type: n.type as any,
@@ -684,7 +711,7 @@ async function seed() {
         default:
           value = 50
       }
-      db.insert(schema.metrics).values({
+      await db.insert(schema.metrics).values({
         id: uuid(),
         userId: artistUserId,
         type: type as any,
@@ -697,7 +724,7 @@ async function seed() {
 
   // Seed Goals
   console.log('🎯 Seeding goals...')
-  db.insert(schema.goals).values([
+  await db.insert(schema.goals).values([
     {
       id: uuid(),
       userId: artistUserId,
@@ -748,7 +775,7 @@ async function seed() {
 
   for (let i = 0; i < activitiesData.length; i++) {
     const a = activitiesData[i]
-    db.insert(schema.activities).values({
+    await db.insert(schema.activities).values({
       id: uuid(),
       userId: a.userId,
       type: a.type,

@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
   const { status, comment } = result.data
 
   // Get deliverable and verify access
-  const deliverable = db.select()
+  const deliverable = await db.select()
     .from(deliverables)
     .where(eq(deliverables.id, deliverableId))
     .get()
@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get project to verify ownership
-  const project = db.select()
+  const project = await db.select()
     .from(projects)
     .where(eq(projects.id, deliverable.projectId))
     .get()
@@ -82,7 +82,7 @@ export default defineEventHandler(async (event) => {
     } as any).run()
 
     // Update project progress
-    const projectDeliverables = db.select()
+    const projectDeliverables = await db.select()
       .from(deliverables)
       .where(eq(deliverables.projectId, project.id))
       .all()
@@ -93,7 +93,7 @@ export default defineEventHandler(async (event) => {
 
     const progress = Math.round((completedCount / projectDeliverables.length) * 100)
 
-    db.update(projects)
+    await db.update(projects)
       .set({ progress })
       .where(eq(projects.id, project.id))
       .run()

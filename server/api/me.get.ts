@@ -17,18 +17,18 @@ export default defineEventHandler(async (event) => {
   let subscription = null
 
   if (user.role === 'artist') {
-    profile = db.select()
+    profile = await db.select()
       .from(artistProfiles)
       .where(eq(artistProfiles.userId, user.id))
       .get()
 
-    const sub = db.select()
+    const sub = await db.select()
       .from(subscriptions)
       .where(eq(subscriptions.userId, user.id))
       .get()
 
-    if (sub) {
-      const plan = db.select()
+    if (sub?.planId) {
+      const plan = await db.select()
         .from(plans)
         .where(eq(plans.id, sub.planId))
         .get()

@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Verify booking exists and belongs to user
-  const booking = db.select()
+  const booking = await db.select()
     .from(bookings)
     .where(eq(bookings.id, bookingId))
     .get()

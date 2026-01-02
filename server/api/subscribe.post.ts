@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   const { planId } = result.data
 
   // Verify plan exists
-  const plan = db.select()
+  const plan = await db.select()
     .from(plans)
     .where(eq(plans.id, planId))
     .get()
@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Update or create subscription
-  const existingSub = db.select()
+  const existingSub = await db.select()
     .from(subscriptions)
     .where(eq(subscriptions.userId, user.id))
     .get()

@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   const projectId = query.projectId as string | undefined
 
   // Get user's projects first
-  const userProjects = db.select({ id: projects.id })
+  const userProjects = await db.select({ id: projects.id })
     .from(projects)
     .where(eq(projects.userId, user.id))
     .all()
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Get deliverables for user's projects
-  let allDeliverables = db.select({
+  let allDeliverables = await db.select({
     id: deliverables.id,
     projectId: deliverables.projectId,
     title: deliverables.title,

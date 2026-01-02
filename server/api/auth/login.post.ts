@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Find user
-  const user = db.select()
+  const user = await db.select()
     .from(users)
     .where(eq(users.id, userId))
     .get()

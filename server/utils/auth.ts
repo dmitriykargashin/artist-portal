@@ -13,7 +13,7 @@ export async function createSession(userId: string, event: AppEvent) {
   const expiresAt = new Date(Date.now() + SESSION_MAX_AGE * 1000)
 
   // Store session in database
-  db.insert(sessions).values({
+  await db.insert(sessions).values({
     id: sessionId,
     userId,
     expiresAt,
@@ -37,7 +37,7 @@ export async function getAppSession(event: AppEvent) {
   if (!sessionId) return null
 
   // Get session from database
-  const session = db.select()
+  const session = await db.select()
     .from(sessions)
     .where(
       and(
@@ -59,7 +59,7 @@ export async function getCurrentUser(event: AppEvent) {
   const session = await getAppSession(event)
   if (!session) return null
 
-  const user = db.select()
+  const user = await db.select()
     .from(users)
     .where(eq(users.id, session.userId))
     .get()
@@ -71,7 +71,7 @@ export async function destroySession(event: AppEvent) {
   const sessionId = getCookie(event, SESSION_COOKIE_NAME)
   
   if (sessionId) {
-    db.delete(sessions).where(eq(sessions.id, sessionId)).run()
+    await db.delete(sessions).where(eq(sessions.id, sessionId)).run()
   }
   
   deleteCookie(event, SESSION_COOKIE_NAME)

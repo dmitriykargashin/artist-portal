@@ -2,7 +2,7 @@ import { db, users } from '../../db'
 
 export default defineEventHandler(async () => {
   // Get all demo users for the auth selection screen
-  const demoUsers = db.select({
+  const demoUsers = await db.select({
     id: users.id,
     email: users.email,
     name: users.name,

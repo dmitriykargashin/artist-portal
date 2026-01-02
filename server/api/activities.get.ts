@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
 
   // For artists, show their own activities
   // For admins, show all activities
-  let allActivities = db.select({
+  let allActivities = await db.select({
     id: activities.id,
     type: activities.type,
     action: activities.action,

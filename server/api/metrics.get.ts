@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const type = query.type as string | undefined
 
-  let allMetrics = db.select()
+  let allMetrics = await db.select()
     .from(metrics)
     .where(eq(metrics.userId, user.id))
     .orderBy(metrics.date)

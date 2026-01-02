@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   const { addonId } = result.data
 
   // Get addon
-  const addon = db.select()
+  const addon = await db.select()
     .from(addons)
     .where(eq(addons.id, addonId))
     .get()
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
 
   // Create project for this addon
   const projectId = randomUUID()
-  db.insert(projects).values({
+  await db.insert(projects).values({
     id: projectId,
     userId: user.id,
     title: addon.name,
@@ -55,12 +55,14 @@ export default defineEventHandler(async (event) => {
   }).run()
 
   // Create deliverables based on addon scope
-  const scope = addon.scope ? JSON.parse(addon.scope as unknown as string) : []
+  const scope = parseJsonField(addon.scope) as string[]
   for (let i = 0; i < scope.length; i++) {
-    db.insert(deliverables).values({
+    const title = scope[i]
+    if (!title) continue
+    await db.insert(deliverables).values({
       id: randomUUID(),
       projectId,
-      title: scope[i],
+      title,
       status: 'not_started',
       priority: 'medium',
       dueDate,
@@ -70,7 +72,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Record purchase
-  db.insert(purchases).values({
+  await db.insert(purchases).values({
     id: randomUUID(),
     userId: user.id,
     addonId,
@@ -81,7 +83,7 @@ export default defineEventHandler(async (event) => {
   }).run()
 
   // Log activity
-  db.insert(activities).values({
+  await db.insert(activities).values({
     id: randomUUID(),
     userId: user.id,
     type: 'purchase',
